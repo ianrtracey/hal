@@ -1,4 +1,7 @@
 import os
+from contextlib import contextmanager
+from urllib.parse import quote
+
 import requests
 from dotenv import load_dotenv
 
@@ -23,6 +26,37 @@ class BlooioClient:
         resp = self.session.get(f"{BASE_URL}/me")
         resp.raise_for_status()
         return resp.json()
+
+    def _chat_url(self, chat_id: str) -> str:
+        return f"{BASE_URL}/chats/{quote(chat_id, safe='')}"
+
+    def send_message(self, chat_id: str, text: str) -> dict:
+        """Send a message to a chat (phone number or email)."""
+        resp = self.session.post(
+            f"{self._chat_url(chat_id)}/messages",
+            json={"text": text},
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+    def start_typing(self, chat_id: str) -> dict:
+        resp = self.session.post(f"{self._chat_url(chat_id)}/typing")
+        resp.raise_for_status()
+        return resp.json()
+
+    def stop_typing(self, chat_id: str) -> dict:
+        resp = self.session.delete(f"{self._chat_url(chat_id)}/typing")
+        resp.raise_for_status()
+        return resp.json()
+
+    @contextmanager
+    def typing(self, chat_id: str):
+        """Context manager: shows typing indicator while processing."""
+        self.start_typing(chat_id)
+        try:
+            yield
+        finally:
+            self.stop_typing(chat_id)
 
 
 if __name__ == "__main__":
