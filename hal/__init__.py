@@ -1,0 +1,2 @@
+"""Hal application package."""
+
