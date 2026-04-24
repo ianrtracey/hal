@@ -36,6 +36,10 @@ async def send_sms(ctx: RunContextWrapper[HalContext], text: str) -> str:
         from blooio_client import BlooioClient
 
         client = BlooioClient(api_key=c.settings.blooio_api_key)
+        try:
+            client.stop_typing(c.chat_id)
+        except Exception:
+            pass
         blooio_response = client.send_message(c.chat_id, text)
         sent = True
 
@@ -49,31 +53,6 @@ async def send_sms(ctx: RunContextWrapper[HalContext], text: str) -> str:
     c.last_reply = text
     return "Message sent."
 
-
-@function_tool
-async def set_thinking(ctx: RunContextWrapper[HalContext], state: str) -> str:
-    """Show or hide the typing indicator. state must be 'on' or 'off'."""
-    c = ctx.context
-    sent = False
-    blooio_response = None
-
-    if c.settings.blooio_api_key:
-        from blooio_client import BlooioClient
-
-        client = BlooioClient(api_key=c.settings.blooio_api_key)
-        if state == "on":
-            blooio_response = client.start_typing(c.chat_id)
-        else:
-            blooio_response = client.stop_typing(c.chat_id)
-        sent = True
-
-    c.db.record_message(
-        c.chat_id,
-        "system",
-        f"thinking:{state}",
-        {"blooio_response": blooio_response, "sent": sent, "source": "openai_agent"},
-    )
-    return f"Thinking indicator {'shown' if state == 'on' else 'hidden'}."
 
 
 @function_tool
@@ -157,7 +136,7 @@ class OpenAIAgentRunner:
         agent = Agent(
             name="Hal",
             instructions=self._instructions,
-            tools=[send_sms, set_thinking, record_note],
+            tools=[send_sms, record_note],
             model=model,
         )
 

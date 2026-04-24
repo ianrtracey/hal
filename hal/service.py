@@ -92,6 +92,7 @@ class HalService:
 
         try:
             if self.agent:
+                self._start_typing(inbound.chat_id)
                 result = await self.agent.run_sms_turn(
                     inbound.chat_id,
                     inbound.text,
@@ -164,6 +165,20 @@ class HalService:
         )
         logger.info("Outbound SMS to %s: %s", chat_id, reply)
         return sent
+
+    def _start_typing(self, chat_id: str) -> None:
+        if self.settings.blooio_api_key:
+            try:
+                BlooioClient(api_key=self.settings.blooio_api_key).start_typing(chat_id)
+            except Exception:
+                pass
+
+    def _stop_typing(self, chat_id: str) -> None:
+        if self.settings.blooio_api_key:
+            try:
+                BlooioClient(api_key=self.settings.blooio_api_key).stop_typing(chat_id)
+            except Exception:
+                pass
 
     def _latest_outbound_sent(self, chat_id: str, inbound_message_id: int) -> bool:
         row = self.db.latest_message_after(chat_id, inbound_message_id, "outbound")
