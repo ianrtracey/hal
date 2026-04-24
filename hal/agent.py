@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import logging
 import subprocess
+import time
 from dataclasses import dataclass
 
 from .config import Settings
 from .db import Database, utc_now
+
+logger = logging.getLogger("hal.agent")
 
 
 PROMPT_FILES = ("system.md", "personality.md", "sms_harness.md")
@@ -47,6 +51,7 @@ class ClaudeCodeAgent:
         latest_text: str,
         inbound_message_id: int,
     ) -> AgentRunResult:
+        t0 = time.monotonic()
         prompt_files = self._load_prompt_files()
         transcript = build_conversation_transcript(self.db, chat_id)
         prompt = self._build_prompt(chat_id, latest_text, transcript, prompt_files)
@@ -58,6 +63,7 @@ class ClaudeCodeAgent:
             prompt,
             command,
         )
+        t_prep = time.monotonic()
 
         stdout = ""
         stderr = ""
@@ -80,6 +86,7 @@ class ClaudeCodeAgent:
         except subprocess.TimeoutExpired as exc:
             stdout = exc.stdout or ""
             stderr = (exc.stderr or "") + f"\nTimed out after {self.settings.claude_timeout_seconds}s"
+        t_claude = time.monotonic()
 
         outbound_count = self.db.count_messages_after(chat_id, inbound_message_id, "outbound")
         latest_reply = self.db.latest_message_after(chat_id, inbound_message_id, "outbound")
@@ -91,6 +98,11 @@ class ClaudeCodeAgent:
             stderr,
             returncode,
             outbound_count,
+        )
+        t_done = time.monotonic()
+        logger.info(
+            "AGENT TIMING prompt_build=%.3fs claude_subprocess=%.3fs post_process=%.3fs total=%.3fs",
+            t_prep - t0, t_claude - t_prep, t_done - t_claude, t_done - t0,
         )
         return AgentRunResult(
             ok=ok,

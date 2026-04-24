@@ -1,0 +1,85 @@
+{
+  "core_thesis": "Maximize long-term career and financial upside by combining applied AI product leadership with strategic timing for founding.",
+  "umbrella_concepts": [
+    {
+      "name": "Agentic Systems for Business Workflows",
+      "definition": "AI agents that automate structured enterprise processes (finance, analytics, reporting)."
+    },
+    {
+      "name": "AI-Native Data Stack",
+      "definition": "End-to-end analytics built with AI-driven pipeline generation and lightweight warehouses (DuckDB, Parquet)."
+    },
+    {
+      "name": "Career EV Optimization",
+      "definition": "Evaluating job decisions based on expected financial and reputational return."
+    }
+  ],
+  "operating_system_thinking": [
+    {
+      "principle": "Optionality Maximization",
+      "description": "Choose paths that preserve future high-upside opportunities."
+    },
+    {
+      "principle": "Compounding Over Time",
+      "description": "Equity, reputation, and skills compound; avoid premature exits."
+    },
+    {
+      "principle": "Signal vs Substance Tradeoff",
+      "description": "Balance prestige (labs) vs real ownership (Ramp/startups)."
+    }
+  ],
+  "ritual_design": [
+    {
+      "ritual": "Career Stress Testing",
+      "description": "Repeatedly analyzing decisions through downside/upside scenarios."
+    },
+    {
+      "ritual": "Quantified Decision Making",
+      "description": "Applying metrics (income, net worth, ARR) to life choices."
+    }
+  ],
+  "collaboration_frameworks": [
+    {
+      "framework": "Exec Alignment",
+      "description": "Working closely with CTO/SVP Eng to drive 0→1 initiatives."
+    },
+    {
+      "framework": "Cross-functional Leverage",
+      "description": "Combining engineering, data science, and product teams."
+    }
+  ],
+  "education_and_empowerment": [
+    {
+      "concept": "AI as Force Multiplier",
+      "definition": "Using AI to enable smaller teams to outperform larger ones."
+    }
+  ],
+  "product_strategy_patterns": [
+    {
+      "pattern": "End-to-End Ownership",
+      "description": "Own ingest → modeling → insights → UI."
+    },
+    {
+      "pattern": "Cost Disruption",
+      "description": "20x cheaper, 10x faster than traditional data stacks."
+    },
+    {
+      "pattern": "Verticalized AI",
+      "description": "Specialized agents for finance workflows."
+    }
+  ],
+  "research_directions": [
+    "Agentic ERP systems",
+    "Efficient data querying (Parquet, DuckDB)",
+    "Workflow orchestration tradeoffs (Temporal vs Prefect)",
+    "AI-driven analytics pipelines"
+  ],
+  "recurring_questions_you_explore": [
+    "Am I on the optimal career path?",
+    "Should I prioritize prestige or ownership?",
+    "When should I found my next company?",
+    "Is my current role sufficiently technical?",
+    "How do I maximize equity upside?",
+    "Am I falling behind peers?"
+  ]
+}

@@ -1,0 +1,137 @@
+{
+  "identity_core": {
+    "name": "Ian",
+    "age": 31,
+    "location": "New York City (Manhattan)",
+    "role": "Staff/Senior Staff Software Engineer (L7), Applied AI",
+    "current_company": "Ramp",
+    "prior_roles": [
+      "Co-founder & CTO (Turntable, YC W23)",
+      "Senior/Tech Lead Engineer (Stripe)",
+      "Senior/Tech Lead Engineer (Pinterest)",
+      "Engineer (Atlassian)"
+    ],
+    "relationship_status": "Engaged",
+    "net_worth_estimate": 750000,
+    "income": {
+      "base_salary": 350000,
+      "rsu_annualized": 900000
+    }
+  },
+  "core_life_domains": {
+    "career": "Applied AI systems, agentic workflows, ERP integrations",
+    "startup_history": "Raised ~$3-3.5M, ~100k ARR, wound down cleanly",
+    "financial_planning": "Aggressive wealth accumulation, equity-heavy comp strategy",
+    "personal_life": "Planning Tuscany wedding (~$135k budget)",
+    "health": "Gym access, hypertrophy goal (+10 lbs muscle), inconsistent cannabis abstinence",
+    "intellectual_pursuits": "AI systems, data infra, financial automation, career strategy"
+  },
+  "major_projects": [
+    {
+      "name": "Turntable",
+      "type": "startup",
+      "description": "AI-powered analytics/BI platform for faster data modeling and pipelines",
+      "metrics": {
+        "funding": "3-3.5M",
+        "ARR": 100000
+      },
+      "status": "wound down"
+    },
+    {
+      "name": "Agentic AI for Finance",
+      "type": "product initiative",
+      "description": "Automating reporting, flux analysis, and ERP workflows",
+      "components": [
+        "NetSuite + QBO integrations",
+        "subledger joins",
+        "AI insights layer"
+      ]
+    },
+    {
+      "name": "AI Reporting Platform",
+      "type": "internal product",
+      "description": "Proactive AI insights system at Ramp",
+      "impact": "first of its kind internally"
+    },
+    {
+      "name": "Data Sandbox System",
+      "type": "infra",
+      "description": "Parquet-based warehouse querying via containers (700MB dataset)",
+      "challenge": "query latency + pre-warming tradeoffs"
+    }
+  ],
+  "skills_and_capabilities": {
+    "technical": [
+      "Distributed systems",
+      "AI/ML application engineering",
+      "Data infrastructure (DuckDB, Snowflake, Parquet)",
+      "Backend (Django, FastAPI)",
+      "Frontend (Next.js, React)",
+      "Workflow orchestration (Temporal, Prefect)"
+    ],
+    "product": [
+      "0→1 product development",
+      "AI-first product design",
+      "Data product strategy"
+    ],
+    "leadership": [
+      "Tech lead",
+      "Exec-level collaboration",
+      "Startup founding experience"
+    ],
+    "analytical": [
+      "Financial modeling",
+      "Career EV optimization",
+      "System design tradeoff analysis"
+    ]
+  },
+  "repeated_thinking_patterns": [
+    "Career optimization via expected value (EV)",
+    "Comparing trajectories vs peers (labs vs fintech vs infra)",
+    "Short-term vs long-term compounding tradeoffs",
+    "Prestige vs ownership vs upside tension",
+    "Desire to maximize optionality before founding again",
+    "Frequent second-guessing of decisions",
+    "Quantifying life decisions (income, net worth, timing)"
+  ],
+  "key_beliefs": [
+    "AI agents will automate large portions of data/finance workflows",
+    "Speed and cost advantages can disrupt analytics infrastructure",
+    "Career moves should maximize long-term optionality and upside",
+    "Prestige and signal matter for future opportunities",
+    "Equity compounding is critical to wealth creation",
+    "Founding success depends on timing + market selection"
+  ],
+  "long_term_directions": [
+    "Found another startup (~2028)",
+    "Target $20–40M personal outcome",
+    "Move toward director/executive leadership",
+    "Build reputation in AI systems + applied AI",
+    "Develop personal brand via writing"
+  ],
+  "strengths": [
+    "Top-tier engineering background (Stripe, Pinterest)",
+    "Rapid promotion to L7",
+    "Strong product + technical hybrid thinking",
+    "High earnings trajectory",
+    "Exec exposure and influence",
+    "Ability to ship quickly in ambiguous environments"
+  ],
+  "risks_and_tensions": [
+    "Imposter syndrome vs elite peers",
+    "Perceived lack of “deep tech” positioning",
+    "Short tenure concerns (job hopping optics)",
+    "Over-optimization / analysis paralysis",
+    "Burnout risk from overworking",
+    "Cannabis usage impacting focus",
+    "Equity concentration risk"
+  ],
+  "highest_leverage_opportunities": [
+    "Build flagship AI ERP product at Ramp",
+    "Achieve L7→Director transition",
+    "Develop strong public writing presence",
+    "Leverage applied AI experience for future founding",
+    "Accumulate significant equity before next move",
+    "Bridge product + infra expertise into unique positioning"
+  ]
+}

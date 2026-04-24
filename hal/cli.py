@@ -90,8 +90,12 @@ def _note(db: Database, chat_id: str, text: str) -> int:
 
 
 def _simulate_inbound(settings: Settings, db: Database, chat_id: str, text: str) -> int:
+    import asyncio
+
     service = HalService(settings, db, LLMClient(settings))
-    result = service.handle_inbound_sms({"chat_id": chat_id, "text": text, "source": "simulate-inbound"})
+    result = asyncio.run(
+        service.handle_inbound_sms({"chat_id": chat_id, "text": text, "source": "simulate-inbound"})
+    )
     _print_json({"ok": True, **result})
     return 0
 

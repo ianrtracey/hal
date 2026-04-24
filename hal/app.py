@@ -150,7 +150,7 @@ def create_app() -> FastAPI:
             return {"status": "ignored", "event_type": event_type, "webhook_id": webhook_id}
 
         try:
-            result = await asyncio.to_thread(request.app.state.service.handle_inbound_sms, payload)
+            result = await request.app.state.service.handle_inbound_sms(payload)
             db.update_webhook_status(webhook_id, "processed")
             result["webhook_id"] = webhook_id
             return result

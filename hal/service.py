@@ -2,16 +2,17 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 import traceback
 from dataclasses import dataclass
 from typing import Any
 
 from blooio_client import BlooioClient
 
-from .agent import ClaudeCodeAgent
 from .config import Settings
 from .db import Database
 from .llm import LLMClient
+from .openai_agent import OpenAIAgentRunner
 
 
 logger = logging.getLogger("hal.service")
@@ -74,10 +75,12 @@ class HalService:
         self.settings = settings
         self.db = db
         self.llm = llm
-        self.agent = ClaudeCodeAgent(settings, db) if settings.agent_enabled else None
+        self.agent = OpenAIAgentRunner(settings, db) if settings.agent_enabled else None
 
-    def handle_inbound_sms(self, payload: dict[str, Any]) -> dict[str, Any]:
+    async def handle_inbound_sms(self, payload: dict[str, Any]) -> dict[str, Any]:
+        t0 = time.monotonic()
         inbound = parse_blooio_payload(payload)
+        t_parse = time.monotonic()
         logger.info("Inbound SMS from %s: %s", inbound.chat_id, inbound.text)
         inbound_message_id = self.db.record_message(
             inbound.chat_id,
@@ -85,13 +88,19 @@ class HalService:
             inbound.text,
             inbound.raw,
         )
+        t_db = time.monotonic()
 
         try:
             if self.agent:
-                result = self.agent.run_sms_turn(
+                result = await self.agent.run_sms_turn(
                     inbound.chat_id,
                     inbound.text,
                     inbound_message_id,
+                )
+                t_agent = time.monotonic()
+                logger.info(
+                    "TIMING parse=%.3fs db_record=%.3fs agent=%.3fs total=%.3fs",
+                    t_parse - t0, t_db - t_parse, t_agent - t_db, t_agent - t0,
                 )
                 if result.ok:
                     logger.info("Agent outbound SMS to %s: %s", inbound.chat_id, result.reply)
@@ -99,17 +108,14 @@ class HalService:
                         "chat_id": inbound.chat_id,
                         "reply": result.reply,
                         "sent": self._latest_outbound_sent(inbound.chat_id, inbound_message_id),
-                        "agent_run_id": result.run_id,
                     }
 
                 self.db.record_error(
-                    source="agent.claude_code",
+                    source="agent.openai_sdk",
                     severity="error",
-                    message=result.stderr or "Claude Code did not record an outbound SMS",
+                    message=result.stderr or "Agent did not send an outbound SMS",
                     raw={
                         "chat_id": inbound.chat_id,
-                        "run_id": result.run_id,
-                        "returncode": result.returncode,
                         "stdout": result.stdout,
                     },
                 )
@@ -119,7 +125,6 @@ class HalService:
                     "chat_id": inbound.chat_id,
                     "reply": fallback,
                     "sent": sent,
-                    "agent_run_id": result.run_id,
                 }
 
             history = self.db.get_recent_messages(

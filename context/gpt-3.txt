@@ -1,0 +1,108 @@
+{
+  "graph_meta": {
+    "version": "1.0",
+    "description": "Personal knowledge graph"
+  },
+  "nodes": [
+    {
+      "id": "n1",
+      "type": "thesis",
+      "title": "Career EV Maximization",
+      "summary": "Optimize decisions for long-term financial and reputational return",
+      "tags": ["career", "finance"]
+    },
+    {
+      "id": "n2",
+      "type": "concept",
+      "title": "Agentic Finance Systems",
+      "summary": "AI agents automating ERP workflows",
+      "tags": ["AI", "finance"]
+    },
+    {
+      "id": "n3",
+      "type": "product",
+      "title": "Ramp AI Reporting",
+      "summary": "AI-driven insights and reporting system",
+      "tags": ["product"]
+    },
+    {
+      "id": "n4",
+      "type": "risk",
+      "title": "Prestige Gap Anxiety",
+      "summary": "Concern about not being in top AI labs",
+      "tags": ["career"]
+    },
+    {
+      "id": "n5",
+      "type": "opportunity",
+      "title": "Director Promotion",
+      "summary": "Transition to leadership role",
+      "tags": ["career"]
+    },
+    {
+      "id": "n6",
+      "type": "strategy",
+      "title": "Stay Until Equity Cliff",
+      "summary": "Maximize compounding before leaving",
+      "tags": ["finance"]
+    },
+    {
+      "id": "n7",
+      "type": "pattern",
+      "title": "Over-Optimization",
+      "summary": "Excessive analysis of decisions",
+      "tags": ["behavior"]
+    },
+    {
+      "id": "n8",
+      "type": "value_target",
+      "title": "Next Startup ($20-40M)",
+      "summary": "Future founding goal",
+      "tags": ["startup"]
+    }
+  ],
+  "edges": [
+    {
+      "from": "n1",
+      "type": "DEFINES",
+      "to": "n6",
+      "weight": 0.9
+    },
+    {
+      "from": "n2",
+      "type": "ENABLES",
+      "to": "n3",
+      "weight": 0.8
+    },
+    {
+      "from": "n3",
+      "type": "IMPLIES",
+      "to": "n5",
+      "weight": 0.7
+    },
+    {
+      "from": "n4",
+      "type": "CONSTRAINS",
+      "to": "n1",
+      "weight": 0.6
+    },
+    {
+      "from": "n7",
+      "type": "RISKS",
+      "to": "n6",
+      "weight": 0.8
+    },
+    {
+      "from": "n5",
+      "type": "ENABLES",
+      "to": "n8",
+      "weight": 0.9
+    },
+    {
+      "from": "n2",
+      "type": "OPPORTUNITY_FOR",
+      "to": "n8",
+      "weight": 0.85
+    }
+  ]
+}
