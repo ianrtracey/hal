@@ -39,7 +39,7 @@ class Settings:
     blooio_api_key: str | None = field(default_factory=lambda: os.environ.get("BLOOIO_API_KEY"))
     anthropic_api_key: str | None = field(default_factory=lambda: os.environ.get("ANTHROPIC_API_KEY"))
     anthropic_model: str = field(
-        default_factory=lambda: os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6-20250514")
+        default_factory=lambda: os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
     )
     agent_enabled: bool = field(default_factory=lambda: _env_bool("HAL_AGENT_ENABLED", False))
     claude_command: list[str] = field(
