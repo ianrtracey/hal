@@ -89,6 +89,24 @@ class BlooioClient:
         resp.raise_for_status()
         return resp.json()
 
+    def react_to_message(
+        self,
+        chat_id: str,
+        message_id: str,
+        reaction: str,
+    ) -> dict:
+        """Add or remove a reaction on a message.
+
+        reaction: e.g. "+love", "+laugh", "-like"
+        message_id: Blooio msg_xxx ID or relative index like "-1"
+        """
+        resp = self.session.post(
+            f"{self._chat_url(chat_id)}/messages/{quote(message_id, safe='')}/reactions",
+            json={"reaction": reaction},
+        )
+        resp.raise_for_status()
+        return resp.json()
+
     def start_typing(self, chat_id: str) -> dict:
         resp = self.session.post(f"{self._chat_url(chat_id)}/typing")
         resp.raise_for_status()

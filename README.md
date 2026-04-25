@@ -3,6 +3,8 @@
 Local personal AI assistant with SMS ingress through Blooio, Claude-backed replies,
 SQLite persistence, scheduled jobs, and a small external supervisor for restarts.
 
+**Production:** `https://ians-hal.duckdns.org` (VPS: `138.197.46.200`)
+
 ## Design docs
 
 - [Agent harness technical spec](docs/agent-harness-tech-spec.md)
