@@ -24,6 +24,8 @@ class InboundSMS:
     text: str
     raw: dict[str, Any]
     message_id: str | None = None
+    sender_id: str | None = None
+    is_group: bool = False
 
 
 def _first_string(*values: Any) -> str | None:
@@ -36,22 +38,33 @@ def _first_string(*values: Any) -> str | None:
 def parse_blooio_payload(payload: dict[str, Any]) -> InboundSMS:
     message = payload.get("message") if isinstance(payload.get("message"), dict) else {}
     chat = payload.get("chat") if isinstance(payload.get("chat"), dict) else {}
-    sender = payload.get("sender") if isinstance(payload.get("sender"), dict) else {}
+    sender_obj = payload.get("sender") if isinstance(payload.get("sender"), dict) else {}
 
+    is_group = bool(payload.get("is_group", False))
+
+    # Extract sender_id: who actually sent this message
+    sender_id = _first_string(
+        payload.get("sender") if isinstance(payload.get("sender"), str) else None,
+        sender_obj.get("phone_number"),
+        sender_obj.get("id"),
+        message.get("from"),
+    )
+
+    # Extract chat_id: the conversation to reply to.
+    # For group chats, prefer group/conversation identifiers over sender.
     chat_id = _first_string(
         payload.get("chat_id"),
         payload.get("conversation_id"),
-        payload.get("sender"),
         payload.get("external_id"),
         payload.get("from"),
         payload.get("phone_number"),
         chat.get("id"),
         chat.get("phone_number"),
         message.get("chat_id"),
-        message.get("from"),
-        sender.get("phone_number"),
-        sender.get("id"),
+        # Fall back to sender only for 1:1 chats
+        sender_id,
     )
+
     text = _first_string(
         payload.get("text"),
         payload.get("body"),
@@ -67,7 +80,14 @@ def parse_blooio_payload(payload: dict[str, Any]) -> InboundSMS:
     if not text:
         raise ValueError("Blooio webhook payload did not include message text")
 
-    return InboundSMS(chat_id=chat_id, text=text, raw=payload, message_id=message_id)
+    return InboundSMS(
+        chat_id=chat_id,
+        text=text,
+        raw=payload,
+        message_id=message_id,
+        sender_id=sender_id,
+        is_group=is_group,
+    )
 
 
 class HalService:
@@ -87,6 +107,7 @@ class HalService:
             "inbound",
             inbound.text,
             inbound.raw,
+            sender_id=inbound.sender_id,
         )
         t_db = time.monotonic()
 

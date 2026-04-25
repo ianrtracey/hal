@@ -40,6 +40,7 @@ class Database:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     conversation_id TEXT NOT NULL REFERENCES conversations(id),
                     direction TEXT NOT NULL CHECK (direction IN ('inbound', 'outbound', 'system')),
+                    sender_id TEXT,
                     text TEXT NOT NULL,
                     raw_json TEXT,
                     created_at TEXT NOT NULL
@@ -111,6 +112,13 @@ class Database:
                     ON agent_runs(conversation_id, created_at);
                 """
             )
+            # Migration: add sender_id to messages if missing (existing DBs)
+            columns = {
+                row[1]
+                for row in conn.execute("PRAGMA table_info(messages)").fetchall()
+            }
+            if "sender_id" not in columns:
+                conn.execute("ALTER TABLE messages ADD COLUMN sender_id TEXT")
 
     def health_check(self) -> bool:
         with self._lock, self.connect() as conn:
@@ -123,6 +131,7 @@ class Database:
         direction: str,
         text: str,
         raw: Any | None = None,
+        sender_id: str | None = None,
     ) -> int:
         now = utc_now()
         raw_json = json.dumps(raw, sort_keys=True) if raw is not None else None
@@ -137,10 +146,10 @@ class Database:
             )
             cursor = conn.execute(
                 """
-                INSERT INTO messages (conversation_id, direction, text, raw_json, created_at)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO messages (conversation_id, direction, sender_id, text, raw_json, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """,
-                (conversation_id, direction, text, raw_json, now),
+                (conversation_id, direction, sender_id, text, raw_json, now),
             )
             return int(cursor.lastrowid)
 
@@ -233,7 +242,7 @@ class Database:
         with self._lock, self.connect() as conn:
             rows = conn.execute(
                 """
-                SELECT id, direction, text, created_at
+                SELECT id, direction, sender_id, text, created_at
                 FROM messages
                 WHERE conversation_id = ?
                 ORDER BY created_at DESC, id DESC
@@ -256,7 +265,7 @@ class Database:
         with self._lock, self.connect() as conn:
             return conn.execute(
                 f"""
-                SELECT id, direction, text, raw_json, created_at
+                SELECT id, direction, sender_id, text, raw_json, created_at
                 FROM messages
                 WHERE {where}
                 ORDER BY created_at ASC, id ASC
@@ -296,7 +305,7 @@ class Database:
         with self._lock, self.connect() as conn:
             return conn.execute(
                 f"""
-                SELECT id, direction, text, raw_json, created_at
+                SELECT id, direction, sender_id, text, raw_json, created_at
                 FROM messages
                 WHERE {where}
                 ORDER BY id DESC

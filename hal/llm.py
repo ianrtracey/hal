@@ -53,6 +53,9 @@ class LLMClient:
             role = "assistant" if direction == "outbound" else "user"
             content = row["text"]
             if content:
+                sender_id = row.get("sender_id") if hasattr(row, "keys") else None
+                if role == "user" and sender_id:
+                    content = f"[{sender_id}] {content}"
                 messages.append({"role": role, "content": content})
         return messages
 

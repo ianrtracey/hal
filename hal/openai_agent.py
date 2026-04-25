@@ -87,7 +87,12 @@ def build_conversation_transcript(db: Database, conversation_id: str) -> str:
         return "\n".join(lines)
     lines.append("")
     for row in rows:
-        speaker = "Ian" if row["direction"] == "inbound" else "Hal"
+        if row["direction"] == "outbound":
+            speaker = "Hal"
+        elif row["sender_id"]:
+            speaker = row["sender_id"]
+        else:
+            speaker = "Unknown"
         lines.append(f"[{row['created_at']}] {speaker}: {row['text']}")
     return "\n".join(lines)
 
