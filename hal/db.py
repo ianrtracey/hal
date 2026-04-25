@@ -252,26 +252,42 @@ class Database:
             ).fetchall()
         return list(reversed(rows))
 
+    def get_conversation_participants(self, conversation_id: str) -> list[str]:
+        with self._lock, self.connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT DISTINCT sender_id
+                FROM messages
+                WHERE conversation_id = ? AND sender_id IS NOT NULL
+                """,
+                (conversation_id,),
+            ).fetchall()
+        return [row["sender_id"] for row in rows]
+
     def get_conversation_messages(
         self,
         conversation_id: str,
         include_system: bool = False,
+        limit: int = 500,
     ) -> list[sqlite3.Row]:
         where = "conversation_id = ?"
         params: tuple[Any, ...] = (conversation_id,)
         if not include_system:
             where += " AND direction != ?"
             params = (conversation_id, "system")
+        params = (*params, limit)
         with self._lock, self.connect() as conn:
-            return conn.execute(
+            rows = conn.execute(
                 f"""
                 SELECT id, direction, sender_id, text, raw_json, created_at
                 FROM messages
                 WHERE {where}
-                ORDER BY created_at ASC, id ASC
+                ORDER BY created_at DESC, id DESC
+                LIMIT ?
                 """,
                 params,
             ).fetchall()
+        return list(reversed(rows))
 
     def count_messages_after(
         self,
