@@ -15,7 +15,12 @@
       "Bash(source:*)",
       "Bash(pgrep:*)",
       "Bash(uv run:*)",
-      "Bash(TERM=xterm-256color tmux:*)"
+      "Bash(TERM=xterm-256color tmux:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git *)",
+      "WebFetch(domain:backend.blooio.com)"
     ]
   }
 }
