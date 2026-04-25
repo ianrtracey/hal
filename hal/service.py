@@ -127,8 +127,7 @@ class HalService:
         t_db = time.monotonic()
 
         if inbound.is_group and not self._mentions_hal(inbound.text):
-            logger.info("Group message without Hal mention, skipping reply")
-            return {"chat_id": inbound.chat_id, "reply": None, "sent": False, "skipped": "no_mention"}
+            logger.info("Group message without Hal mention, letting agent decide")
 
         try:
             if self.agent:
@@ -151,6 +150,11 @@ class HalService:
                         "reply": result.reply,
                         "sent": self._latest_outbound_sent(inbound.chat_id, inbound_message_id),
                     }
+
+                # In group chats, the agent may intentionally choose not to reply
+                if inbound.is_group:
+                    logger.info("Agent chose not to reply in group %s", inbound.chat_id)
+                    return {"chat_id": inbound.chat_id, "reply": None, "sent": False, "skipped": "agent_silent"}
 
                 self.db.record_error(
                     source="agent.openai_sdk",
