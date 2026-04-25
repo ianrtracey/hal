@@ -54,11 +54,20 @@ header before processing messages. If no signing secret is configured,
 `HAL_WEBHOOK_TOKEN` can be used as a local fallback via `X-Hal-Webhook-Token`
 or `?token=...`.
 
-For local webhook testing:
+### Local development with ngrok
+
+Start the app and expose it via ngrok so Blooio can reach your local machine:
 
 ```bash
+# Terminal 1 — run the app
+uv run uvicorn hal.app:app --host 127.0.0.1 --port 8000
+
+# Terminal 2 — start the ngrok tunnel
 ngrok http 8000
 ```
+
+ngrok will print a public URL like `https://xxxx-xxxx.ngrok-free.app`. The ngrok
+inspect UI is available at `http://127.0.0.1:4040` to replay and debug requests.
 
 Register the public HTTPS URL with Blooio:
 
@@ -69,7 +78,8 @@ curl -X POST 'https://backend.blooio.com/v2/api/webhooks' \
   -d '{"webhook_url":"https://YOUR_NGROK_DOMAIN/webhooks/blooio","webhook_type":"message"}'
 ```
 
-Save the returned `signing_secret` as `BLOOIO_WEBHOOK_SECRET` and restart Hal.
+Save the returned `signing_secret` as `BLOOIO_WEBHOOK_SECRET` in `.env` and
+restart Hal.
 
 ## Run under the supervisor
 
