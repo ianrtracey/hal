@@ -17,15 +17,19 @@ logger = logging.getLogger("hal.agent")
 
 PROMPT_FILES = ("system.md", "personality.md")
 CONTACTS_DIR = "notes/contacts"
+CHATS_DIR = "notes/chats"
 
 
-def _contacts_dir(settings: Settings) -> Path:
-    return settings.repo_root / CONTACTS_DIR
+def _safe_filename(value: str) -> str:
+    return re.sub(r"[^\d+\w-]", "", value)
 
 
 def _contact_path(settings: Settings, phone_number: str) -> Path:
-    safe = re.sub(r"[^\d+]", "", phone_number)
-    return _contacts_dir(settings) / f"{safe}.md"
+    return settings.repo_root / CONTACTS_DIR / f"{_safe_filename(phone_number)}.md"
+
+
+def _chat_path(settings: Settings, chat_id: str) -> Path:
+    return settings.repo_root / CHATS_DIR / f"{_safe_filename(chat_id)}.md"
 
 
 def load_contact_notes(settings: Settings, phone_numbers: list[str]) -> str:
@@ -39,6 +43,15 @@ def load_contact_notes(settings: Settings, phone_numbers: list[str]) -> str:
     if not sections:
         return ""
     return "# Contact notes\n\n" + "\n\n".join(sections)
+
+
+def load_chat_notes(settings: Settings, chat_id: str) -> str:
+    path = _chat_path(settings, chat_id)
+    if path.exists():
+        content = path.read_text().strip()
+        if content:
+            return f"# Chat notes for {chat_id}\n\n{content}"
+    return ""
 
 
 @dataclass
@@ -115,6 +128,26 @@ async def remember_contact(
     return f"Remembered about {phone_number}: {fact}"
 
 
+@function_tool
+async def remember_chat(ctx: RunContextWrapper[HalContext], fact: str) -> str:
+    """Remember a fact about the current chat or group. Use this for things specific
+    to the conversation — group plans, shared decisions, running topics, group name,
+    etc. Not for facts about individual people (use remember_contact for that)."""
+    c = ctx.context
+    path = _chat_path(c.settings, c.chat_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    existing = path.read_text().strip() if path.exists() else ""
+    line = f"- {fact}"
+    if existing:
+        if line in existing:
+            return "Already known about this chat."
+        content = f"{existing}\n{line}\n"
+    else:
+        content = f"{line}\n"
+    path.write_text(content)
+    return f"Remembered about chat: {fact}"
+
+
 def _load_instructions(settings: Settings) -> str:
     parts = []
     for filename in PROMPT_FILES:
@@ -175,8 +208,11 @@ class OpenAIAgentRunner:
         transcript = build_conversation_transcript(self.db, chat_id)
         participants = self.db.get_conversation_participants(chat_id)
         contact_notes = load_contact_notes(self.settings, participants)
+        chat_notes = load_chat_notes(self.settings, chat_id)
 
         parts = []
+        if chat_notes:
+            parts.append(chat_notes)
         if contact_notes:
             parts.append(contact_notes)
         parts.append(transcript)
@@ -197,7 +233,7 @@ class OpenAIAgentRunner:
         agent = Agent(
             name="Hal",
             instructions=self._instructions,
-            tools=[send_sms, record_note, remember_contact],
+            tools=[send_sms, record_note, remember_contact, remember_chat],
             model=model,
         )
 
