@@ -151,15 +151,16 @@ class HalService:
                         "sent": self._latest_outbound_sent(inbound.chat_id, inbound_message_id),
                     }
 
-                # In group chats, the agent may intentionally choose not to reply
-                if inbound.is_group:
-                    logger.info("Agent chose not to reply in group %s", inbound.chat_id)
+                # Agent ran cleanly but chose not to call any tools — treat as
+                # intentional silence (e.g. waiting for a follow-up message bubble).
+                if not result.stderr:
+                    logger.info("Agent chose not to reply in %s", inbound.chat_id)
                     return {"chat_id": inbound.chat_id, "reply": None, "sent": False, "skipped": "agent_silent"}
 
                 self.db.record_error(
                     source="agent.openai_sdk",
                     severity="error",
-                    message=result.stderr or "Agent did not send an outbound SMS",
+                    message=result.stderr,
                     raw={
                         "chat_id": inbound.chat_id,
                         "stdout": result.stdout,
