@@ -5,7 +5,7 @@ import logging
 import re
 import time
 import traceback
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from blooio_client import BlooioClient
@@ -27,6 +27,8 @@ class InboundSMS:
     message_id: str | None = None
     sender_id: str | None = None
     is_group: bool = False
+    group_id: str | None = None
+    participants: list[str] = field(default_factory=list)
 
 
 def _first_string(*values: Any) -> str | None:
@@ -42,6 +44,15 @@ def parse_blooio_payload(payload: dict[str, Any]) -> InboundSMS:
     sender_obj = payload.get("sender") if isinstance(payload.get("sender"), dict) else {}
 
     is_group = bool(payload.get("is_group", False))
+    group_id = _first_string(payload.get("group_id"), chat.get("group_id"))
+
+    # Extract participants list from group webhook payloads
+    raw_participants = payload.get("participants") or []
+    participants = [
+        p.get("identifier")
+        for p in raw_participants
+        if isinstance(p, dict) and p.get("identifier")
+    ]
 
     # Extract sender_id: who actually sent this message
     sender_id = _first_string(
@@ -52,8 +63,9 @@ def parse_blooio_payload(payload: dict[str, Any]) -> InboundSMS:
     )
 
     # Extract chat_id: the conversation to reply to.
-    # For group chats, prefer group/conversation identifiers over sender.
+    # For group chats, prefer group_id over other identifiers.
     chat_id = _first_string(
+        group_id,
         payload.get("chat_id"),
         payload.get("conversation_id"),
         payload.get("external_id"),
@@ -88,6 +100,8 @@ def parse_blooio_payload(payload: dict[str, Any]) -> InboundSMS:
         message_id=message_id,
         sender_id=sender_id,
         is_group=is_group,
+        group_id=group_id,
+        participants=participants,
     )
 
 
@@ -123,6 +137,7 @@ class HalService:
                     inbound.chat_id,
                     inbound.text,
                     inbound_message_id,
+                    webhook_participants=inbound.participants or None,
                 )
                 t_agent = time.monotonic()
                 logger.info(

@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rsync:*)",
+      "Bash(tmux new-session:*)",
+      "Bash(tmux ls:*)",
+      "Bash(tmux capture-pane:*)",
+      "Bash(curl:*)",
+      "Bash(systemctl status:*)",
+      "Bash(systemctl:*)",
+      "Bash(tmux send-keys:*)",
+      "Bash(pkill:*)",
+      "Bash(export:*)",
+      "WebFetch(domain:docs.blooio.com)",
+      "Bash(source:*)",
+      "Bash(pgrep:*)",
+      "Bash(uv run:*)",
+      "Bash(TERM=xterm-256color tmux:*)"
+    ]
+  }
+}

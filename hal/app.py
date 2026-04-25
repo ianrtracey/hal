@@ -203,6 +203,51 @@ def create_app() -> FastAPI:
             "stderr": result.stderr,
         }
 
+    @app.post("/admin/groups")
+    async def create_group(
+        request: Request,
+        payload: dict[str, Any] = Body(...),
+        x_hal_admin_token: str | None = Header(default=None),
+    ) -> dict[str, Any]:
+        """Create a Blooio group and optionally send an initial message to link the chat."""
+        token = x_hal_admin_token or request.query_params.get("token")
+        _check_required_token(request.app.state.settings.admin_token, token, "admin")
+        settings = request.app.state.settings
+        if not settings.blooio_api_key:
+            raise HTTPException(status_code=500, detail="BLOOIO_API_KEY not configured")
+
+        from blooio_client import BlooioClient
+
+        client = BlooioClient(api_key=settings.blooio_api_key)
+        name = payload.get("name", "Hal Group")
+        members = payload.get("members", [])
+        initial_message = payload.get("message")
+
+        group = client.create_group(name, members=members or None)
+        result: dict[str, Any] = {"group": group}
+
+        if initial_message and group.get("group_id"):
+            msg = client.send_message(group["group_id"], initial_message)
+            result["initial_message"] = msg
+
+        return result
+
+    @app.get("/admin/groups")
+    async def list_groups(
+        request: Request,
+        x_hal_admin_token: str | None = Header(default=None),
+    ) -> dict[str, Any]:
+        token = x_hal_admin_token or request.query_params.get("token")
+        _check_required_token(request.app.state.settings.admin_token, token, "admin")
+        settings = request.app.state.settings
+        if not settings.blooio_api_key:
+            raise HTTPException(status_code=500, detail="BLOOIO_API_KEY not configured")
+
+        from blooio_client import BlooioClient
+
+        client = BlooioClient(api_key=settings.blooio_api_key)
+        return client.list_groups()
+
     return app
 
 

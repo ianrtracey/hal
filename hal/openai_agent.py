@@ -64,6 +64,7 @@ class HalContext:
     messages_sent: int = 0
     last_reply: str | None = None
     reaction_sent: bool = False
+    group_created: bool = False
 
 
 @function_tool
@@ -171,6 +172,49 @@ async def remember_contact(
 
 
 @function_tool
+async def create_group_chat(
+    ctx: RunContextWrapper[HalContext],
+    name: str,
+    members: list[str],
+    initial_message: str,
+) -> str:
+    """Create a new iMessage group chat and send the first message.
+
+    Use this when the user asks you to start a group chat or group conversation.
+    The first message is required to establish the iMessage link.
+
+    Args:
+        name: A name for the group (e.g. "Wedding Planning")
+        members: List of phone numbers to include (e.g. ["+15551234567", "+15559876543"]).
+                 Always include the current user's number.
+        initial_message: The first message to send in the group.
+    """
+    c = ctx.context
+    if not c.settings.blooio_api_key:
+        return "Error: Blooio API key not configured."
+
+    from blooio_client import BlooioClient
+
+    client = BlooioClient(api_key=c.settings.blooio_api_key)
+    group = client.create_group(name, members=members)
+    group_id = group.get("group_id")
+    if not group_id:
+        return f"Error creating group: {group}"
+
+    msg = client.send_message(group_id, initial_message)
+
+    c.db.record_message(
+        group_id,
+        "outbound",
+        initial_message,
+        {"blooio_response": msg, "sent": True, "source": "openai_agent.create_group_chat"},
+    )
+
+    c.group_created = True
+    return f"Group '{name}' created (ID: {group_id}) with {len(members)} members. Initial message sent. Now use send_sms to confirm to the user."
+
+
+@function_tool
 async def remember_chat(ctx: RunContextWrapper[HalContext], fact: str) -> str:
     """Remember a fact about the current chat or group. Use this for things specific
     to the conversation — group plans, shared decisions, running topics, group name,
@@ -244,11 +288,17 @@ class OpenAIAgentRunner:
         chat_id: str,
         latest_text: str,
         inbound_message_id: int,
+        webhook_participants: list[str] | None = None,
     ) -> AgentRunResult:
         t0 = time.monotonic()
 
         transcript = build_conversation_transcript(self.db, chat_id)
-        participants = self.db.get_conversation_participants(chat_id)
+        db_participants = self.db.get_conversation_participants(chat_id)
+        # Merge DB participants with webhook participants for full coverage
+        all_numbers = set(db_participants)
+        if webhook_participants:
+            all_numbers.update(webhook_participants)
+        participants = sorted(all_numbers)
         contact_notes = load_contact_notes(self.settings, participants)
         chat_notes = load_chat_notes(self.settings, chat_id)
 
@@ -279,7 +329,7 @@ class OpenAIAgentRunner:
         agent = Agent(
             name="Hal",
             instructions=instructions,
-            tools=[send_sms, react, record_note, remember_contact, remember_chat],
+            tools=[send_sms, react, record_note, remember_contact, remember_chat, create_group_chat],
             model=model,
         )
 
@@ -294,7 +344,7 @@ class OpenAIAgentRunner:
                 t_prep - t0, t_done - t_prep, t_done - t0,
             )
 
-            ok = context.messages_sent > 0
+            ok = context.messages_sent > 0 or context.group_created or context.reaction_sent
             return AgentRunResult(
                 ok=ok,
                 stdout=str(result.final_output),

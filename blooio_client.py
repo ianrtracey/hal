@@ -126,6 +126,84 @@ class BlooioClient:
         finally:
             self.stop_typing(chat_id)
 
+    # ── Groups ──────────────────────────────────────────────────────────
+
+    def list_groups(self, *, limit: int = 50, offset: int = 0) -> dict:
+        """List all groups."""
+        resp = self.session.get(
+            f"{BASE_URL}/groups",
+            params={"limit": limit, "offset": offset},
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+    def create_group(
+        self,
+        name: str,
+        *,
+        members: list[str] | None = None,
+        chat_guid: str | None = None,
+    ) -> dict:
+        """Create a group. Optionally link to an existing iMessage chat via chat_guid."""
+        body: dict = {"name": name}
+        if members:
+            body["members"] = members
+        if chat_guid:
+            body["chat_guid"] = chat_guid
+        resp = self.session.post(f"{BASE_URL}/groups", json=body)
+        resp.raise_for_status()
+        return resp.json()
+
+    def get_group(self, group_id: str) -> dict:
+        """Get details about a group."""
+        resp = self.session.get(f"{BASE_URL}/groups/{quote(group_id, safe='')}")
+        resp.raise_for_status()
+        return resp.json()
+
+    def delete_group(self, group_id: str) -> dict:
+        """Delete a group."""
+        resp = self.session.delete(f"{BASE_URL}/groups/{quote(group_id, safe='')}")
+        resp.raise_for_status()
+        return resp.json()
+
+    def list_group_members(self, group_id: str) -> dict:
+        """List members of a group."""
+        resp = self.session.get(
+            f"{BASE_URL}/groups/{quote(group_id, safe='')}/members"
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+    # ── Webhooks ────────────────────────────────────────────────────────
+
+    def list_webhooks(self) -> dict:
+        """List all registered webhooks."""
+        resp = self.session.get(f"{BASE_URL}/webhooks")
+        resp.raise_for_status()
+        return resp.json()
+
+    def create_webhook(
+        self,
+        webhook_url: str,
+        *,
+        webhook_type: str = "all",
+    ) -> dict:
+        """Register a new webhook endpoint."""
+        resp = self.session.post(
+            f"{BASE_URL}/webhooks",
+            json={"webhook_url": webhook_url, "webhook_type": webhook_type},
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+    def delete_webhook(self, webhook_id: str) -> dict:
+        """Delete a webhook registration."""
+        resp = self.session.delete(
+            f"{BASE_URL}/webhooks/{quote(webhook_id, safe='')}"
+        )
+        resp.raise_for_status()
+        return resp.json()
+
 
 if __name__ == "__main__":
     client = BlooioClient()
