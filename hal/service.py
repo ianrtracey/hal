@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import time
 import traceback
 from dataclasses import dataclass
@@ -111,6 +112,10 @@ class HalService:
         )
         t_db = time.monotonic()
 
+        if inbound.is_group and not self._mentions_hal(inbound.text):
+            logger.info("Group message without Hal mention, skipping reply")
+            return {"chat_id": inbound.chat_id, "reply": None, "sent": False, "skipped": "no_mention"}
+
         try:
             if self.agent:
                 self._start_typing(inbound.chat_id)
@@ -186,6 +191,11 @@ class HalService:
         )
         logger.info("Outbound SMS to %s: %s", chat_id, reply)
         return sent
+
+    _HAL_MENTION_RE = re.compile(r"\bhal\b|@hal", re.IGNORECASE)
+
+    def _mentions_hal(self, text: str) -> bool:
+        return bool(self._HAL_MENTION_RE.search(text))
 
     def _start_typing(self, chat_id: str) -> None:
         if self.settings.blooio_api_key:
