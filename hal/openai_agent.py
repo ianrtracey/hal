@@ -3,9 +3,11 @@ from __future__ import annotations
 import logging
 import re
 import time
+from datetime import datetime
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from agents import Agent, Runner, RunContextWrapper, function_tool, OpenAIChatCompletionsModel
 from openai import AsyncOpenAI
@@ -61,6 +63,7 @@ class HalContext:
     db: Database
     messages_sent: int = 0
     last_reply: str | None = None
+    reaction_sent: bool = False
 
 
 @function_tool
@@ -91,6 +94,45 @@ async def send_sms(ctx: RunContextWrapper[HalContext], text: str) -> str:
     c.last_reply = text
     return "Message sent."
 
+
+
+VALID_REACTIONS = {"love", "like", "dislike", "laugh", "emphasize", "question"}
+
+
+@function_tool
+async def react(ctx: RunContextWrapper[HalContext], reaction: str) -> str:
+    """React to the user's latest message with an iMessage tapback.
+
+    Use this to add nonverbal reactions that feel natural in iMessage:
+    - "love" — when the user shares something heartfelt, kind, or you genuinely appreciate it
+    - "like" — to acknowledge receipt of a task, instruction, or plan (thumbs up)
+    - "laugh" — when something is genuinely funny
+    - "emphasize" — for surprise, excitement, or to highlight something important
+    - "question" — when something is unclear or you need clarification
+    - "dislike" — rarely; for something unfortunate or bad news the user shares
+
+    You can also react AND reply in the same turn — a reaction + short reply
+    often feels more natural than a reply alone.
+    """
+    c = ctx.context
+    cleaned = reaction.strip().lower().lstrip("+-")
+    if cleaned not in VALID_REACTIONS:
+        return f"Invalid reaction '{reaction}'. Use one of: {', '.join(sorted(VALID_REACTIONS))}"
+
+    if c.settings.blooio_api_key:
+        from blooio_client import BlooioClient
+
+        client = BlooioClient(api_key=c.settings.blooio_api_key)
+        client.react_to_message(c.chat_id, "-1", f"+{cleaned}")
+
+    c.db.record_message(
+        c.chat_id,
+        "system",
+        f"[reacted with {cleaned}]",
+        {"source": "openai_agent.react", "reaction": cleaned},
+    )
+    c.reaction_sent = True
+    return f"Reacted with {cleaned}."
 
 
 @function_tool
@@ -230,10 +272,14 @@ class OpenAIAgentRunner:
             openai_client=self._client,
         )
 
+        now = datetime.now(ZoneInfo("America/New_York"))
+        time_header = f"Current date and time: {now.strftime('%A, %B %-d, %Y %I:%M %p %Z')}"
+        instructions = f"{time_header}\n\n{self._instructions}"
+
         agent = Agent(
             name="Hal",
-            instructions=self._instructions,
-            tools=[send_sms, record_note, remember_contact, remember_chat],
+            instructions=instructions,
+            tools=[send_sms, react, record_note, remember_contact, remember_chat],
             model=model,
         )
 
