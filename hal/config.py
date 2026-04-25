@@ -68,6 +68,17 @@ class Settings:
         default_factory=lambda: int(os.environ.get("HAL_MAX_CONTEXT_MESSAGES", "20"))
     )
 
+    public_base_url: str = field(
+        default_factory=lambda: os.environ.get(
+            "HAL_PUBLIC_BASE_URL", "https://ians-hal.duckdns.org"
+        ).rstrip("/")
+    )
+    attachments_dir: Path = field(
+        default_factory=lambda: Path(
+            os.environ.get("HAL_ATTACHMENTS_DIR", REPO_ROOT / "var" / "attachments")
+        )
+    )
+
 
 def get_settings() -> Settings:
     return Settings()

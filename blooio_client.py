@@ -33,9 +33,29 @@ class BlooioClient:
     def _number_url(self, phone_number: str) -> str:
         return f"{BASE_URL}/me/numbers/{quote(phone_number, safe='')}"
 
-    def send_message(self, chat_id: str, text: str, *, share_contact: bool = False) -> dict:
-        """Send a message to a chat (phone number or email)."""
-        body: dict = {"text": text}
+    def send_message(
+        self,
+        chat_id: str,
+        text: str | None = None,
+        *,
+        attachments: list[str | dict] | None = None,
+        share_contact: bool = False,
+    ) -> dict:
+        """Send a message to a chat (phone number, email, or group ID).
+
+        At least one of `text` or `attachments` must be provided.
+
+        attachments: list of publicly-fetchable URLs, or dicts of the form
+        {"url": "...", "name": "optional filename"}. Blooio fetches each URL
+        and forwards it as an iMessage/SMS attachment.
+        """
+        if not text and not attachments:
+            raise ValueError("send_message requires text, attachments, or both")
+        body: dict = {}
+        if text:
+            body["text"] = text
+        if attachments:
+            body["attachments"] = attachments
         if share_contact:
             body["share_contact"] = True
         resp = self.session.post(

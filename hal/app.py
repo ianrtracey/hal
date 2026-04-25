@@ -7,7 +7,9 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import Body, FastAPI, Header, HTTPException, Request
+from fastapi.responses import FileResponse
 
+from .attachments import resolve_attachment
 from .blooio_signature import BlooioSignatureError, verify_blooio_signature
 from .config import Settings, get_settings
 from .db import Database
@@ -68,6 +70,13 @@ def create_app() -> FastAPI:
             "database": "ok",
             "scheduler": "running" if scheduler and scheduler.running else "disabled",
         }
+
+    @app.get("/attachments/{name}")
+    async def serve_attachment(request: Request, name: str) -> FileResponse:
+        path = resolve_attachment(request.app.state.settings, name)
+        if path is None:
+            raise HTTPException(status_code=404, detail="Attachment not found")
+        return FileResponse(path)
 
     @app.post("/webhooks/blooio")
     async def blooio_webhook(
