@@ -123,6 +123,19 @@ class Database:
 
                 CREATE INDEX IF NOT EXISTS idx_fetch_log_created
                     ON fetch_log(created_at);
+
+                CREATE TABLE IF NOT EXISTS search_log (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    chat_id TEXT,
+                    query TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    result_count INTEGER NOT NULL DEFAULT 0,
+                    latency_ms INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT NOT NULL
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_search_log_created
+                    ON search_log(created_at);
                 """
             )
             # Migration: add sender_id to messages if missing (existing DBs)
@@ -469,6 +482,24 @@ class Database:
                 VALUES (?, ?, ?, ?, ?, ?)
                 """,
                 (chat_id, url, status, bytes_returned, latency_ms, utc_now()),
+            )
+            return int(cursor.lastrowid)
+
+    def record_search(
+        self,
+        chat_id: str | None,
+        query: str,
+        status: str,
+        result_count: int,
+        latency_ms: int,
+    ) -> int:
+        with self._lock, self.connect() as conn:
+            cursor = conn.execute(
+                """
+                INSERT INTO search_log (chat_id, query, status, result_count, latency_ms, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (chat_id, query, status, result_count, latency_ms, utc_now()),
             )
             return int(cursor.lastrowid)
 

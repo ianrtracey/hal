@@ -38,6 +38,7 @@ class Settings:
 
     blooio_api_key: str | None = field(default_factory=lambda: os.environ.get("BLOOIO_API_KEY"))
     anthropic_api_key: str | None = field(default_factory=lambda: os.environ.get("ANTHROPIC_API_KEY"))
+    brave_api_key: str | None = field(default_factory=lambda: os.environ.get("BRAVE_API_KEY"))
     anthropic_model: str = field(
         default_factory=lambda: os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
     )

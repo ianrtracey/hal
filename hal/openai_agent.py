@@ -15,6 +15,7 @@ from openai import AsyncOpenAI
 from .config import Settings
 from .db import Database
 from .tools.fetch_page import fetch_page
+from .tools.web_search import web_search
 
 logger = logging.getLogger("hal.agent")
 
@@ -330,7 +331,7 @@ class OpenAIAgentRunner:
         agent = Agent(
             name="Hal",
             instructions=instructions,
-            tools=[send_sms, react, record_note, remember_contact, remember_chat, create_group_chat, fetch_page],
+            tools=[send_sms, react, record_note, remember_contact, remember_chat, create_group_chat, fetch_page, web_search],
             model=model,
         )
 
