@@ -20,7 +20,10 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(git *)",
-      "WebFetch(domain:backend.blooio.com)"
+      "WebFetch(domain:backend.blooio.com)",
+      "Bash(sqlite3 *)",
+      "Read(//data/**)",
+      "WebSearch"
     ]
   }
 }

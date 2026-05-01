@@ -110,6 +110,19 @@ class Database:
 
                 CREATE INDEX IF NOT EXISTS idx_agent_runs_conversation_created
                     ON agent_runs(conversation_id, created_at);
+
+                CREATE TABLE IF NOT EXISTS fetch_log (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    chat_id TEXT,
+                    url TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    bytes_returned INTEGER NOT NULL DEFAULT 0,
+                    latency_ms INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT NOT NULL
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_fetch_log_created
+                    ON fetch_log(created_at);
                 """
             )
             # Migration: add sender_id to messages if missing (existing DBs)
@@ -438,6 +451,24 @@ class Database:
                 VALUES (?, ?, ?, ?, ?, ?)
                 """,
                 (source, severity, message, traceback_text, raw_json, utc_now()),
+            )
+            return int(cursor.lastrowid)
+
+    def record_fetch(
+        self,
+        chat_id: str | None,
+        url: str,
+        status: str,
+        bytes_returned: int,
+        latency_ms: int,
+    ) -> int:
+        with self._lock, self.connect() as conn:
+            cursor = conn.execute(
+                """
+                INSERT INTO fetch_log (chat_id, url, status, bytes_returned, latency_ms, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (chat_id, url, status, bytes_returned, latency_ms, utc_now()),
             )
             return int(cursor.lastrowid)
 

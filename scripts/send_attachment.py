@@ -4,14 +4,18 @@
 Hosts the local file at a public URL (via Hal's /attachments/{id} route)
 so Blooio can fetch it server-side, then sends a message referencing it.
 
+Defaults are wired up to send /data/bot.mp3 to the
+NYC summer 2026 group chat (Ian, Mason, Isaac, Hal).
+Override with --to and a positional path to send anything else.
+
 Usage:
-    uv run python scripts/send_attachment.py <local_path> [--to PHONE] [--text "caption"]
+    uv run python scripts/send_attachment.py [<local_path>] [--to PHONE] [--text "caption"]
 
 Examples:
-    # Send /data/sample.m4a to Ian's number with no caption
-    uv run python scripts/send_attachment.py /data/sample.m4a
+    # Send the default Hal voice note to the NYC group
+    uv run python scripts/send_attachment.py
 
-    # Custom recipient and caption
+    # Custom file and recipient
     uv run python scripts/send_attachment.py /data/sample.m4a \\
         --to +15551234567 --text "have a listen"
 """
@@ -29,12 +33,19 @@ from hal.attachments import host_attachment  # noqa: E402
 from hal.config import get_settings  # noqa: E402
 
 
-DEFAULT_RECIPIENT = "+16238662766"
+# NYC summer 2026 crew: Ian, Mason, Isaac, Hal
+DEFAULT_RECIPIENT = "grp_0693bd3478ac4463"
+DEFAULT_LOCAL_PATH = "/data/bot.mp3"
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Send a message with an attachment via Blooio.")
-    parser.add_argument("local_path", help="Path to a local file to attach.")
+    parser.add_argument(
+        "local_path",
+        nargs="?",
+        default=DEFAULT_LOCAL_PATH,
+        help=f"Path to a local file to attach (default: {DEFAULT_LOCAL_PATH}).",
+    )
     parser.add_argument(
         "--to",
         default=DEFAULT_RECIPIENT,
